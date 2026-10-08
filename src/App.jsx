@@ -11,7 +11,10 @@ const STOP_WORDS = new Set([
   'years','year','required','requirements','responsibilities','skills','ability','strong',
   'looking','new','nice','best','bit','http','https','www','com','org','net','ly','within',
   'across','alongside','become','becoming','company','team','teams','join','opportunity',
-  'opportunities','successful','success','supportive','exciting','excellent','great'
+  'opportunities','successful','success','supportive','exciting','excellent','great',
+  'ample','take','accessible','adapting','annual','associate','audiences','backed','bar',
+  'brands','build','building','calls','capacity','chat','clearly','collaborative',
+  'comfortable','comfortably'
 ])
 
 function extractKeywords(text) {
