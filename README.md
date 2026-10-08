@@ -17,11 +17,11 @@ Requirements: Node.js and npm.
 npm install
 ```
 
-Create a local `.env` file based on `.env.example` and add your own API key:
+Create a `.env` file and add your Gemini API key:
 
 ```env
-OPENAI_API_KEY=your_real_key_here
-OPENAI_MODEL=gpt-4.1-mini
+GEMINI_API_KEY=your_real_key_here
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 Then start both the Vite client and API server:
@@ -38,9 +38,9 @@ Open the Vite URL printed in the terminal. The API runs on port 3001 and Vite pr
 
 - The app does not save CVs or job descriptions to a database.
 - Text is sent to the server only when you press **Analyse with AI**.
-- The server forwards the supplied text to the configured AI provider to produce the analysis.
+- The server forwards the supplied text to Google Gemini to produce the analysis.
 - This project does not intentionally log CV or job-description text.
-- The AI provider may process or retain submitted content under its own terms and settings. Do not use real personal information until you have reviewed the provider's current data controls.
+- Google's free Gemini API tier may use submitted content to improve its products under its current terms. Review Google's current terms and data controls before sending real personal information; use fictional test data while developing.
 
 This is a personal-use project, not a production-hardened public service. The API has basic request-size limits but does not yet implement authentication or rate limiting.
 
