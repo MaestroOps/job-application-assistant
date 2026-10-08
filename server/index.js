@@ -3,7 +3,7 @@ import express from 'express'
 
 const app = express()
 const port = Number(process.env.API_PORT || 3001)
-const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+const model = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite'
 
 app.disable('x-powered-by')
 app.use(express.json({ limit: '100kb' }))
