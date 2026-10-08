@@ -8,17 +8,28 @@ const STOP_WORDS = new Set([
   'should','some','such','than','that','the','their','them','then','there','these','they',
   'this','those','through','under','until','very','was','were','what','when','where','which',
   'while','who','will','with','would','you','your','role','work','working','experience',
-  'years','year','required','requirements','responsibilities','skills','ability','strong'
+  'years','year','required','requirements','responsibilities','skills','ability','strong',
+  'looking','new','nice','best','bit','http','https','www','com','org','net','ly','within',
+  'across','alongside','become','becoming','company','team','teams','join','opportunity',
+  'opportunities','successful','success','supportive','exciting','excellent','great'
 ])
 
 function extractKeywords(text) {
-  const words = text.toLowerCase().match(/[a-z][a-z+#.-]{1,}/g) || []
+  // Remove URLs and email addresses before tokenising so their fragments are not scored.
+  const cleaned = text
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/www\.\S+/gi, ' ')
+    .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, ' ')
+
+  const words = cleaned.toLowerCase().match(/[a-z][a-z+#-]{2,}/g) || []
   const counts = new Map()
+
   for (const word of words) {
     const clean = word.replace(/^[.-]+|[.-]+$/g, '')
     if (clean.length < 3 || STOP_WORDS.has(clean) || /^\d+$/.test(clean)) continue
     counts.set(clean, (counts.get(clean) || 0) + 1)
   }
+
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([word]) => word)
@@ -48,7 +59,7 @@ function App() {
   }, [result])
 
   function handleAnalyse() {
-    if (!cv.trim() || !job.trim()) {
+    if (!canAnalyse) {
       setError('Paste both your CV and the job description first.')
       setResult(null)
       return
