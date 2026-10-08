@@ -1,84 +1,47 @@
-import { useMemo, useState } from 'react'
-
-const STOP_WORDS = new Set([
-  'about','above','after','again','against','also','among','and','any','are','because',
-  'been','before','being','below','between','both','but','can','could','does','doing',
-  'during','each','few','for','from','further','had','has','have','having','here','how',
-  'into','its','itself','just','more','most','other','our','out','over','own','same',
-  'should','some','such','than','that','the','their','them','then','there','these','they',
-  'this','those','through','under','until','very','was','were','what','when','where','which',
-  'while','who','will','with','would','you','your','role','work','working','experience',
-  'years','year','required','requirements','responsibilities','skills','ability','strong',
-  'looking','new','nice','best','bit','http','https','www','com','org','net','ly','within',
-  'across','alongside','become','becoming','company','team','teams','join','opportunity',
-  'opportunities','successful','success','supportive','exciting','excellent','great',
-  'ample','take','accessible','adapting','annual','associate','audiences','backed','bar',
-  'brands','build','building','calls','capacity','chat','clearly','collaborative',
-  'comfortable','comfortably'
-])
-
-function extractKeywords(text) {
-  // Remove URLs and email addresses before tokenising so their fragments are not scored.
-  const cleaned = text
-    .replace(/https?:\/\/\S+/gi, ' ')
-    .replace(/www\.\S+/gi, ' ')
-    .replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, ' ')
-
-  const words = cleaned.toLowerCase().match(/[a-z][a-z+#-]{2,}/g) || []
-  const counts = new Map()
-
-  for (const word of words) {
-    const clean = word.replace(/^[.-]+|[.-]+$/g, '')
-    if (clean.length < 3 || STOP_WORDS.has(clean) || /^\d+$/.test(clean)) continue
-    counts.set(clean, (counts.get(clean) || 0) + 1)
-  }
-
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([word]) => word)
-}
-
-function analyse(cv, job) {
-  const cvText = cv.toLowerCase()
-  const keywords = extractKeywords(job).slice(0, 40)
-  const matched = keywords.filter((word) => cvText.includes(word))
-  const missing = keywords.filter((word) => !cvText.includes(word))
-  const score = keywords.length ? Math.round((matched.length / keywords.length) * 100) : 0
-  return { score, matched, missing, total: keywords.length }
-}
+import { useState } from 'react'
 
 function App() {
   const [cv, setCv] = useState('')
-  const [job, setJob] = useState('')
-  const [result, setResult] = useState(null)
+  const [jobDescription, setJobDescription] = useState('')
+  const [analysis, setAnalysis] = useState(null)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const canAnalyse = cv.trim().length > 0 && job.trim().length > 0
-  const scoreLabel = useMemo(() => {
-    if (!result) return ''
-    if (result.score >= 70) return 'Strong keyword overlap'
-    if (result.score >= 40) return 'Some relevant overlap'
-    return 'Low keyword overlap'
-  }, [result])
-
-  function handleAnalyse() {
-    if (!canAnalyse) {
+  async function handleAnalyse() {
+    if (!cv.trim() || !jobDescription.trim()) {
       setError('Paste both your CV and the job description first.')
-      setResult(null)
+      setAnalysis(null)
       return
     }
+
     setError('')
-    setResult(analyse(cv, job))
+    setAnalysis(null)
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cv, jobDescription }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Analysis failed. Please try again.')
+      setAnalysis(data.analysis)
+    } catch (err) {
+      setError(err.message || 'Could not complete the analysis. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <main className="app">
       <section className="hero">
-        <p className="eyebrow">JOB APPLICATION ASSISTANT / 01</p>
+        <p className="eyebrow">JOB APPLICATION ASSISTANT / 02</p>
         <h1>Stop guessing.<br />Start matching.</h1>
         <p className="subtitle">
-          Compare your CV against a job description. Find matching keywords,
-          spot gaps, and make your next edit count.
+          Get an evidence-based comparison of your CV and a job description,
+          with practical ways to strengthen your application.
         </p>
       </section>
 
@@ -94,69 +57,87 @@ function App() {
             onChange={(event) => setCv(event.target.value)}
             placeholder="Paste your CV here..."
             rows="18"
+            autoComplete="off"
           />
         </div>
 
         <div className="panel">
           <div className="panel-heading">
-            <label htmlFor="job">Job description</label>
-            <span>{job.trim() ? job.trim().split(/\s+/).length : 0} words</span>
+            <label htmlFor="job-description">Job description</label>
+            <span>{jobDescription.trim() ? jobDescription.trim().split(/\s+/).length : 0} words</span>
           </div>
           <textarea
-            id="job"
-            value={job}
-            onChange={(event) => setJob(event.target.value)}
-            placeholder="Paste the job description here..."
+            id="job-description"
+            value={jobDescription}
+            onChange={(event) => setJobDescription(event.target.value)}
+            placeholder="Paste the full job description here..."
             rows="18"
           />
         </div>
       </section>
 
       <div className="action-row">
-        <button className="analyse-button" type="button" onClick={handleAnalyse}>
-          Analyse Match <span aria-hidden="true">↗</span>
+        <button className="analyse-button" type="button" onClick={handleAnalyse} disabled={loading}>
+          {loading ? 'Analysing…' : 'Analyse with AI'} <span aria-hidden="true">↗</span>
         </button>
-        <p className="privacy-note">Your text stays in this browser for now.</p>
+        <p className="privacy-note">No CV database. Text is sent to the AI provider only when you request analysis.</p>
       </div>
 
       {error && <p className="error-message" role="alert">{error}</p>}
 
-      {result && (
+      {analysis && (
         <section className="results" aria-live="polite">
           <div className="results-top">
             <div>
-              <p className="eyebrow">YOUR FIRST PASS</p>
-              <h2>{scoreLabel}</h2>
+              <p className="eyebrow">AI-ASSISTED ANALYSIS</p>
+              <h2>{analysis.overall_assessment}</h2>
               <p className="result-description">
-                {result.matched.length} of {result.total} extracted job keywords appear in your CV.
+                An evidence-based estimate, not a prediction of hiring success.
               </p>
             </div>
-            <div className="score" aria-label={`Keyword overlap ${result.score} percent`}>
-              <strong>{result.score}%</strong>
-              <span>overlap</span>
+            <div className="score" aria-label={`Estimated match ${analysis.match_score} percent`}>
+              <strong>{analysis.match_score}%</strong>
+              <span>estimated match</span>
             </div>
           </div>
-          <p className="caveat">
-            This is a simple keyword comparison, not an AI judgement or a prediction of hiring success.
-            It can miss synonyms and context.
-          </p>
-          <div className="keyword-columns">
-            <div className="keyword-group">
-              <h3>Found in your CV <span>{result.matched.length}</span></h3>
-              {result.matched.length ? (
-                <div className="chips">{result.matched.map((word) => <span className="chip found" key={word}>{word}</span>)}</div>
-              ) : <p className="empty-state">No keyword matches yet.</p>}
-            </div>
-            <div className="keyword-group">
-              <h3>Potential gaps <span>{result.missing.length}</span></h3>
-              {result.missing.length ? (
-                <div className="chips">{result.missing.map((word) => <span className="chip missing" key={word}>{word}</span>)}</div>
-              ) : <p className="empty-state">No gaps in this keyword pass.</p>}
-            </div>
+
+          <div className="analysis-section">
+            <h3>Where your CV aligns <span>{analysis.strengths.length}</span></h3>
+            {analysis.strengths.length ? analysis.strengths.map((item, index) => (
+              <article className="analysis-item" key={`strength-${index}`}>
+                <h4>{item.requirement}</h4>
+                <p><strong>CV evidence:</strong> {item.cv_evidence}</p>
+                <p>{item.note}</p>
+              </article>
+            )) : <p className="empty-state">No strong matches were identified in the supplied CV.</p>}
           </div>
+
+          <div className="analysis-section">
+            <h3>Missing or weak evidence <span>{analysis.gaps.length}</span></h3>
+            {analysis.gaps.length ? analysis.gaps.map((item, index) => (
+              <article className="analysis-item gap-item" key={`gap-${index}`}>
+                <div className="item-heading">
+                  <h4>{item.requirement}</h4>
+                  <span className="tag">{item.importance}</span>
+                </div>
+                <p><strong>{item.status === 'missing' ? 'Not found in CV' : 'Evidence could be stronger'}:</strong> {item.explanation}</p>
+              </article>
+            )) : <p className="empty-state">No significant gaps were identified.</p>}
+          </div>
+
+          <div className="analysis-section">
+            <h3>Recommended next steps</h3>
+            {analysis.recommendations.length ? (
+              <ol className="recommendations">
+                {analysis.recommendations.map((item, index) => <li key={index}>{item}</li>)}
+              </ol>
+            ) : <p className="empty-state">No recommendations returned.</p>}
+          </div>
+          <p className="caveat">AI can misunderstand or overlook details. Verify every finding and never add skills, qualifications, or achievements you cannot substantiate.</p>
         </section>
       )}
-      <footer>EARLY BUILD · KEYWORD ANALYSIS ONLY · MORE COMING</footer>
+
+      <footer>PERSONAL TOOL · NO CV DATABASE · AI ANALYSIS</footer>
     </main>
   )
 }
