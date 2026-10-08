@@ -55,3 +55,20 @@ footer { margin-top: 54px; color: #8b857b; font-size: 10px; font-weight: 750; le
   .score { width: 84px; height: 84px; }
   .score strong { font-size: 22px; }
 }
+
+.analyse-button:disabled { opacity: .65; cursor: wait; transform: none; }
+.analysis-section { margin-top: 28px; }
+.analysis-section > h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; font-size: 16px; }
+.analysis-section > h3 span { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: #eee9df; font-size: 11px; }
+.analysis-item { padding: 16px 0; border-top: 1px solid #e8e2d8; }
+.analysis-item h4 { margin: 0 0 8px; font-size: 14px; }
+.analysis-item p { margin: 6px 0 0; color: #625e57; font-size: 13px; line-height: 1.55; }
+.gap-item { border-left: 3px solid #d6a58b; padding-left: 14px; }
+.item-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.item-heading h4 { margin: 0; }
+.tag { flex-shrink: 0; padding: 4px 8px; border-radius: 999px; background: #eee9df; color: #625e57; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+.recommendations { display: grid; gap: 10px; padding-left: 22px; color: #393630; font-size: 14px; line-height: 1.6; }
+@media (max-width: 520px) {
+  .results-top { flex-direction: column; }
+  .score { align-self: flex-start; }
+}
