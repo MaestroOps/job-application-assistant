@@ -117,7 +117,10 @@ app.post('/api/analyze', async (req, res) => {
       })
     }
 
-    const outputText = payload.output_text
+    const outputText = payload.output_text || payload.output
+      ?.flatMap((item) => item.content || [])
+      .find((item) => item.type === 'output_text')?.text
+
     if (!outputText) {
       return res.status(502).json({ error: 'The AI returned no analysis. Please try again.' })
     }
