@@ -77,7 +77,7 @@ export default async function handler(req, res) {
             'The match_score must be an integer between 0 and 100.',
           ].join(' ') }],
         },
-        contents: [{ role: 'user', parts: [{ text: 'CV:\\n' + cv + '\\n\\nJOB DESCRIPTION:\\n' + jobDescription }] }],
+        contents: [{ role: 'user', parts: [{ text: 'CV:\n' + cv + '\n\nJOB DESCRIPTION:\n' + jobDescription }] }],
         generationConfig: { responseMimeType: 'application/json', responseSchema: analysisSchema },
       }),
     })
